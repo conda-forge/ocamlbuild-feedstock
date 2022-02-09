@@ -1,6 +1,6 @@
 {% set name = "ocamlbuild" %}
-{% set version = "0.13.1" %}
-{% set sha256 = "79839544bcaebc8f9f0d73d029e2b67e2c898bba046c559ea53de81ea763408c" %}
+{% set version = "0.14.1" %}
+{% set sha256 = "4e1279ff0ef80c862eaa5207a77020d741e89ef94f0e4a92a37c4188dbf08256" %}
 
 package:
   name: {{ name|lower }}
@@ -13,7 +13,7 @@ source:
 
 build:
   number: 0
-  skip: True  # [win]
+  skip: true  # [win]
 
 requirements:
   build:
@@ -33,7 +33,7 @@ about:
   license: LGPL-2.0-only
   license_family: LGPL
   license_file: LICENSE
-  summary: 'OCamlbuild is a generic build tool, that has built-in rules for building OCaml library and programs.'
+  summary: OCamlbuild is a generic build tool, that has built-in rules for building OCaml library and programs.
 
   # The remaining entries in this section are optional, but recommended
   description: |
