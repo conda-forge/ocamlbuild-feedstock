@@ -1,6 +1,6 @@
 {% set name = "ocamlbuild" %}
-{% set version = "0.13.1" %}
-{% set sha256 = "79839544bcaebc8f9f0d73d029e2b67e2c898bba046c559ea53de81ea763408c" %}
+{% set version = "0.15.0" %}
+{% set sha256 = "d3f6ee73100b575d4810247d10ed8f53fccef4e90daf0e4a4c5f3e6a3030a9c9" %}
 
 package:
   name: {{ name|lower }}
@@ -13,11 +13,12 @@ source:
 
 build:
   number: 0
-  skip: True  # [win]
+  skip: true  # [win]
 
 requirements:
   build:
     - {{ compiler('c') }}
+    - {{ stdlib("c") }}
   host:
     - ocaml
   run:
