@@ -1,6 +1,6 @@
 {% set name = "ocamlbuild" %}
-{% set version = "0.14.2" %}
-{% set sha256 = "62d2dab6037794c702a83ac584a7066d018cf1645370d1f3d5764c2b458791b1" %}
+{% set version = "0.15.0" %}
+{% set sha256 = "d3f6ee73100b575d4810247d10ed8f53fccef4e90daf0e4a4c5f3e6a3030a9c9" %}
 
 package:
   name: {{ name|lower }}
@@ -18,6 +18,7 @@ build:
 requirements:
   build:
     - {{ compiler('c') }}
+    - {{ stdlib("c") }}
     - make
   host:
     - ocaml
