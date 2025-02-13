@@ -1,6 +1,6 @@
 {% set name = "ocamlbuild" %}
-{% set version = "0.15.0" %}
-{% set sha256 = "d3f6ee73100b575d4810247d10ed8f53fccef4e90daf0e4a4c5f3e6a3030a9c9" %}
+{% set version = "0.16.0" %}
+{% set sha256 = "104fa954c28a6d731674f2844e3f0c87b08db51d38f4ea25f4653bb60ef2e8f1" %}
 
 package:
   name: {{ name|lower }}
