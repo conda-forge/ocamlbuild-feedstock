@@ -1,0 +1,77 @@
+context:
+  name: ocamlbuild
+  version: 0.16.1
+  library: ${{ "Library/" if not unix }}
+  m2: ${{ "m2-" if not unix }}
+
+package:
+  name: ocamlbuild
+  version: ${{ version }}
+
+source:
+  url: https://github.com/ocaml/ocamlbuild/archive/${{ version }}.tar.gz
+  sha256: 2ba6857f2991b7f69368e8db818b163d31cf5a367f15f5953bf8f01a77b3d4fc
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ stdlib("c") }}
+    - ${{ m2 }}make
+    - binutils
+    - ocaml >=5.3.0
+    - ${{ m2 }}sed
+    - if: osx
+      then:
+        - lld
+        - llvm-tools
+    - if: not unix
+      then:
+        - ${{ m2 }}coreutils
+        - ${{ m2 }}diffutils
+        - ${{ m2 }}which
+  run_constraints:
+    - ocaml >=5.3.0
+
+tests:
+  - package_contents:
+      bin:
+        - ocamlbuild
+        - ocamlbuild.native
+
+  - script:
+      - ocamlbuild -version | grep ${{ version }}
+      - ocamlbuild.native -version | grep ${{ version }}
+    requirements:
+      run:
+        - ${{ m2 }}grep
+
+about:
+  homepage: https://ocaml.org/
+  license: LGPL-2.0-only
+  license_family: LGPL
+  license_file: LICENSE
+  summary: OCamlbuild is a generic build tool, that has built-in rules for building OCaml library and programs.
+
+  # The remaining entries in this section are optional, but recommended
+  description: |
+    OCaml is an implementation of the ML language, based on the Caml Light
+    dialect extended with a complete class-based object system and a powerful
+    module system in the style of Standard ML.
+
+    OCamlbuild was distributed as part of the OCaml distribution for OCaml
+    versions between 3.10.0 and 4.02.3. Starting from OCaml 4.03, it is now
+    released separately (with its own version numbering).
+
+    You should refer to the OCambuild manual for more informations on how to
+    use ocamlbuild.
+  documentation: https://github.com/ocaml/ocamlbuild/blob/master/manual/manual.adoc
+  repository: https://github.com/ocaml/ocamlbuild
+
+extra:
+  recipe-maintainers:
+    - dslarm
+    - peterjc
+    - MementoRC
