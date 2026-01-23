@@ -20,7 +20,7 @@ else
   export BUILD_INC="${_BUILD_PREFIX_}/Library/include"
   export BUILD_LIB="${_BUILD_PREFIX_}/Library/lib"
   export HOST_PREFIX="${_PREFIX_}/Library"
-  export HOST_LIB="${HOST_PREFIX}/Library/lib"
+  export HOST_LIB="${HOST_PREFIX}/lib"
   # Stublibs path for bytecode DLLs (dllunixbyt.dll, etc.)
   export CAML_LD_LIBRARY_PATH="${OCAMLLIB}/stublibs"
 fi

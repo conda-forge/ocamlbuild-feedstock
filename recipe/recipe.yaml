@@ -2,6 +2,7 @@ context:
   name: ocamlbuild
   version: 0.16.1
   library: ${{ "Library/" if not unix }}
+  dot: ${{ "./" if unix }}
   m2: ${{ "m2-" if not unix }}
 
 package:
@@ -37,9 +38,16 @@ requirements:
 
 tests:
   - package_contents:
+      strict: true
       bin:
         - ocamlbuild
         - ocamlbuild.native
+      files:
+        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuild.{cmx,o}
+        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuild_*.{cmx,o}
+        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.a
+        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.cmxa
+        - ${{ library }}share/man/man1/ocamlbuild.1
 
   - script:
       - ocamlbuild -version | grep ${{ version }}
@@ -47,6 +55,32 @@ tests:
     requirements:
       run:
         - ${{ m2 }}grep
+
+  # Full functional test on native platforms (not emulated)
+  - if: (linux and x86_64) or osx or win
+    then:
+      script:
+        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+        - ocamlbuild hello.native && ${{ dot }}hello.native
+        - ocamlbuild -clean
+        - ocamlbuild hello.byte && ${{ dot }}hello.byte
+      requirements:
+        run:
+          - ${{ c_compiler }}_impl_${{ target_platform }} >=${{ c_compiler_version }}
+          - ocaml
+
+  # Simpler test on emulated platforms (aarch64, ppc64le) - QEMU has linking issues
+  - if: linux and (aarch64 or ppc64le)
+    then:
+      script:
+        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+        # Test ocamlbuild rule/flag documentation
+        - ocamlbuild -documentation
+        # Test compilation only (no linking - QEMU struggles with linking)
+        - ocamlbuild hello.cmo
+      requirements:
+        run:
+          - ocaml
 
 about:
   homepage: https://ocaml.org/
