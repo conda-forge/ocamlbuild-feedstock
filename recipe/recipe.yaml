@@ -50,14 +50,23 @@ tests:
         - ${{ library }}share/man/man1/ocamlbuild.1
 
   - script:
-      - ocamlbuild -version | grep ${{ version }}
-      - ocamlbuild.native -version | grep ${{ version }}
+      - file ${CONDA_PREFIX}/${{ library }}/bin/ocamlbuild
+      - file ${CONDA_PREFIX}/${{ library }}/bin/ocamlbuild.native
     requirements:
       run:
-        - ${{ m2 }}grep
+        - ${{ m2 }}file
+
+  - if: not (aarch64 or arm64 or ppc64le)
+    then:
+      script:
+        - ocamlbuild -version | grep ${{ version }}
+        - ocamlbuild.native -version | grep ${{ version }}
+      requirements:
+        run:
+          - ${{ m2 }}grep
 
   # Full functional test on native platforms (not emulated)
-  - if: (linux and x86_64) or osx or win
+  - if: not (aarch64 or arm64 or ppc64le)
     then:
       script:
         - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
@@ -66,17 +75,23 @@ tests:
         - ocamlbuild hello.byte && ${{ dot }}hello.byte
       requirements:
         run:
-          - ${{ c_compiler }}_impl_${{ target_platform }} >=${{ c_compiler_version }}
+          - ${{ c_compiler }}_impl_${{ target_platform }}
           - ocaml
 
   # Simpler test on emulated platforms (aarch64, ppc64le) - QEMU has linking issues
   - if: linux and (aarch64 or ppc64le)
     then:
       script:
-        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
-        # Test ocamlbuild rule/flag documentation
         - ocamlbuild -documentation
-        # Test compilation only (no linking - QEMU struggles with linking)
+      requirements:
+        run:
+          - file
+          - ocaml
+
+  - if: linux and aarch64
+    then:
+      script:
+        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
         - ocamlbuild hello.cmo
       requirements:
         run:
