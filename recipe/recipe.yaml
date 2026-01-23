@@ -49,12 +49,17 @@ tests:
         - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.cmxa
         - ${{ library }}share/man/man1/ocamlbuild.1
 
-  - script:
-      - file ${CONDA_PREFIX}/${{ library }}/bin/ocamlbuild
-      - file ${CONDA_PREFIX}/${{ library }}/bin/ocamlbuild.native
-    requirements:
-      run:
-        - ${{ m2 }}file
+  - if: aarch64 or arm64 or ppc64le
+    then:
+      script:
+        - if: arm64
+          then:
+            - otool -hv ${CONDA_PREFIX}/bin/ocamlbuild
+            - otool -hv ${CONDA_PREFIX}/bin/ocamlbuild.native
+        - if: aarch64 or ppc64le
+          then:
+            - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild
+            - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native
 
   - if: not (aarch64 or arm64 or ppc64le)
     then:
@@ -69,7 +74,11 @@ tests:
   - if: not (aarch64 or arm64 or ppc64le)
     then:
       script:
-        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+        - if: unix
+          then:
+            - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+          else:
+            - echo let () = print_endline "Hello from ocamlbuild" > hello.ml
         - ocamlbuild hello.native && ${{ dot }}hello.native
         - ocamlbuild -clean
         - ocamlbuild hello.byte && ${{ dot }}hello.byte
