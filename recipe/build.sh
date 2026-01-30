@@ -40,7 +40,7 @@ fi
 export OCAMLBUILD_PREFIX=${HOST_PREFIX}
 
 export OCAMLBUILD_BINDIR=${OCAMLBUILD_PREFIX}/bin
-export OCAMLBUILD_LIBDIR=${OCAMLBUILD_PREFIX}/lib/ocamlbuild
+export OCAMLBUILD_LIBDIR=${OCAMLBUILD_PREFIX}/lib/ocaml
 export OCAMLBUILD_MANDIR=${OCAMLBUILD_PREFIX}/share/man
 
 # # Modifying the assumption that ocaml is installed in PREFIX - Now, maybe it should (?)
@@ -56,7 +56,7 @@ if [[ "${target_platform}" != "linux-"* ]] && [[ "${target_platform}" != "osx-"*
 fi
 
 make configure
-LINKFLAGS="" make native man
+LINKFLAGS="" make native byte man
 # This needs ocamlfind:
 # make tests
-make install-bin-native install-lib-native install-man
+make install-bin-native install-lib install-man

@@ -43,10 +43,11 @@ tests:
         - ocamlbuild
         - ocamlbuild.native
       files:
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuild.{cmx,o}
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuild_*.{cmx,o}
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.a
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.cmxa
+        - ${{ library }}lib/ocaml/ocamlbuild/META
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.{cmx,o,cmo}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.{cmi,cmx,o}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.{a,cma,cmxa}
+        - ${{ library }}lib/ocaml/ocamlbuild/signatures.{cmi,cmti,mli}
         - ${{ library }}share/man/man1/ocamlbuild.1
 
   - if: aarch64 or arm64 or ppc64le
