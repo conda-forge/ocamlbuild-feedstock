@@ -22,7 +22,7 @@ requirements:
     - ${{ stdlib("c") }}
     - ${{ m2 }}make
     - binutils
-    - ocaml >=5.3.0
+    - ocaml >=5.3.0 *_12*
     - ${{ m2 }}sed
     - if: osx
       then:
@@ -34,7 +34,7 @@ requirements:
         - ${{ m2 }}diffutils
         - ${{ m2 }}which
   run_constraints:
-    - ocaml >=5.3.0
+    - ocaml >=5.3.0 *_12*
 
 tests:
   - package_contents:
@@ -43,10 +43,11 @@ tests:
         - ocamlbuild
         - ocamlbuild.native
       files:
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuild.{cmx,o}
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuild_*.{cmx,o}
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.a
-        - ${{ library }}lib/ocamlbuild/ocamlbuild/ocamlbuildlib.cmxa
+        - ${{ library }}lib/ocaml/ocamlbuild/META
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.{cmx,o,cmo}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.{cmi,cmx,o}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.{a,cma,cmxa}
+        - ${{ library }}lib/ocaml/ocamlbuild/signatures.{cmi,cmti,mli}
         - ${{ library }}share/man/man1/ocamlbuild.1
 
   - if: aarch64 or arm64 or ppc64le
