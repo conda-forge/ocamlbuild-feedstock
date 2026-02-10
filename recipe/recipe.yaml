@@ -2,6 +2,7 @@ context:
   name: ocamlbuild
   version: 0.16.1
   library: ${{ "Library/" if not unix }}
+  dot: ${{ "./" if unix }}
   m2: ${{ "m2-" if not unix }}
 
 package:
@@ -13,7 +14,7 @@ source:
   sha256: 2ba6857f2991b7f69368e8db818b163d31cf5a367f15f5953bf8f01a77b3d4fc
 
 build:
-  number: 1
+  number: 2
 
 requirements:
   build:
@@ -21,7 +22,7 @@ requirements:
     - ${{ stdlib("c") }}
     - ${{ m2 }}make
     - binutils
-    - ocaml >=5.3.0
+    - ocaml >=5.3.0 *_12*
     - ${{ m2 }}sed
     - if: osx
       then:
@@ -33,20 +34,78 @@ requirements:
         - ${{ m2 }}diffutils
         - ${{ m2 }}which
   run_constraints:
-    - ocaml >=5.3.0
+    - ocaml >=5.3.0 *_12*
 
 tests:
   - package_contents:
+      strict: true
       bin:
         - ocamlbuild
         - ocamlbuild.native
+      files:
+        - ${{ library }}lib/ocaml/ocamlbuild/META
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.{cmx,o,cmo}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.{cmi,cmx,o}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.{a,cma,cmxa}
+        - ${{ library }}lib/ocaml/ocamlbuild/signatures.{cmi,cmti,mli}
+        - ${{ library }}share/man/man1/ocamlbuild.1
 
-  - script:
-      - ocamlbuild -version | grep ${{ version }}
-      - ocamlbuild.native -version | grep ${{ version }}
-    requirements:
-      run:
-        - ${{ m2 }}grep
+  - if: aarch64 or arm64 or ppc64le
+    then:
+      script:
+        - if: arm64
+          then:
+            - otool -hv ${CONDA_PREFIX}/bin/ocamlbuild
+            - otool -hv ${CONDA_PREFIX}/bin/ocamlbuild.native
+        - if: aarch64 or ppc64le
+          then:
+            - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild
+            - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native
+
+  - if: not (aarch64 or arm64 or ppc64le)
+    then:
+      script:
+        - ocamlbuild -version | grep ${{ version }}
+        - ocamlbuild.native -version | grep ${{ version }}
+      requirements:
+        run:
+          - ${{ m2 }}grep
+
+  # Full functional test on native platforms (not emulated)
+  - if: not (aarch64 or arm64 or ppc64le)
+    then:
+      script:
+        - if: unix
+          then:
+            - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+          else:
+            - echo let () = print_endline "Hello from ocamlbuild" > hello.ml
+        - ocamlbuild hello.native && ${{ dot }}hello.native
+        - ocamlbuild -clean
+        - ocamlbuild hello.byte && ${{ dot }}hello.byte
+      requirements:
+        run:
+          - ${{ c_compiler }}_impl_${{ target_platform }}
+          - ocaml
+
+  # Simpler test on emulated platforms (aarch64, ppc64le) - QEMU has linking issues
+  - if: linux and (aarch64 or ppc64le)
+    then:
+      script:
+        - ocamlbuild -documentation
+      requirements:
+        run:
+          - file
+          - ocaml
+
+  - if: linux and aarch64
+    then:
+      script:
+        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+        - ocamlbuild hello.cmo
+      requirements:
+        run:
+          - ocaml
 
 about:
   homepage: https://ocaml.org/
