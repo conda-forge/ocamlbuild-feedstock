@@ -14,16 +14,18 @@ source:
   sha256: 2ba6857f2991b7f69368e8db818b163d31cf5a367f15f5953bf8f01a77b3d4fc
 
 build:
-  number: 2
+  number: 0
 
 requirements:
   build:
     - ${{ compiler('c') }}
     - ${{ stdlib("c") }}
     - ${{ m2 }}make
-    - binutils
-    - ocaml >=5.3.0 *_12*
     - ${{ m2 }}sed
+    - ocaml_${{ build_platform }} >=5.4.0
+    - if: build_platform != target_platform
+      then:
+        - ocaml_${{ target_platform }} >=5.4.0
     - if: osx
       then:
         - lld
@@ -34,7 +36,7 @@ requirements:
         - ${{ m2 }}diffutils
         - ${{ m2 }}which
   run_constraints:
-    - ocaml >=5.3.0 *_12*
+    - ocaml >=5.4.0
 
 tests:
   - package_contents:
@@ -50,19 +52,21 @@ tests:
         - ${{ library }}lib/ocaml/ocamlbuild/signatures.{cmi,cmti,mli}
         - ${{ library }}share/man/man1/ocamlbuild.1
 
-  - if: aarch64 or arm64 or ppc64le
+  # Cross-compiled platforms: verify binary architecture
+  - if: build_platform != target_platform
     then:
       script:
-        - if: arm64
+        - if: osx
           then:
             - otool -hv ${CONDA_PREFIX}/bin/ocamlbuild
             - otool -hv ${CONDA_PREFIX}/bin/ocamlbuild.native
-        - if: aarch64 or ppc64le
+        - if: linux
           then:
             - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild
             - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native
 
-  - if: not (aarch64 or arm64 or ppc64le)
+  # Native platforms: version check
+  - if: build_platform == target_platform
     then:
       script:
         - ocamlbuild -version | grep ${{ version }}
@@ -71,8 +75,8 @@ tests:
         run:
           - ${{ m2 }}grep
 
-  # Full functional test on native platforms (not emulated)
-  - if: not (aarch64 or arm64 or ppc64le)
+  # Native platforms: full functional test
+  - if: build_platform == target_platform
     then:
       script:
         - if: unix
@@ -86,26 +90,19 @@ tests:
       requirements:
         run:
           - ${{ c_compiler }}_impl_${{ target_platform }}
-          - ocaml
+          - ocaml-compiler
 
-  # Simpler test on emulated platforms (aarch64, ppc64le) - QEMU has linking issues
-  - if: linux and (aarch64 or ppc64le)
+  # Cross-compiled platforms: limited tests (QEMU constraints)
+  - if: linux and (build_platform != target_platform)
     then:
       script:
         - ocamlbuild -documentation
-      requirements:
-        run:
-          - file
-          - ocaml
-
-  - if: linux and aarch64
-    then:
-      script:
         - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
         - ocamlbuild hello.cmo
       requirements:
         run:
-          - ocaml
+          - file
+          - ocaml-compiler
 
 about:
   homepage: https://ocaml.org/
