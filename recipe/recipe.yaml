@@ -1,9 +1,9 @@
 context:
   name: ocamlbuild
   version: 0.16.1
-  library: ${{ "Library/" if not unix }}
-  dot: ${{ "./" if unix }}
-  m2: ${{ "m2-" if not unix }}
+  library: ${{ "Library/" if not unix else "" }}
+  dot: ${{ "./" if unix else "" }}
+  m2: ${{ "m2-" if not unix else "" }}
 
 package:
   name: ocamlbuild
@@ -26,10 +26,6 @@ requirements:
     - if: build_platform != target_platform
       then:
         - ocaml_${{ target_platform }} >=5.4.0
-    - if: osx
-      then:
-        - lld
-        - llvm-tools
     - if: not unix
       then:
         - ${{ m2 }}coreutils
@@ -45,7 +41,9 @@ tests:
         - ocamlbuild
         - ocamlbuild.native
       files:
-        - ${{ library }}lib/ocaml/ocamlbuild/META
+        - if: unix
+          then:
+            - ${{ library }}lib/ocaml/ocamlbuild/META
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.{cmx,o,cmo}
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.{cmi,cmx,o}
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.{a,cma,cmxa}
