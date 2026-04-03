@@ -41,8 +41,11 @@ setup_ocaml_env() {
     export HOST_PREFIX="${PREFIX}"
   else
     # Windows paths use Library subdirectory
+    # _BUILD_PREFIX_ has mixed format (D:/...) for OCaml tools
+    # _BUILD_PREFIX has MSYS2 format (/d/...) safe for Makefiles (no D: colon)
     export OCAML_PREFIX="${_BUILD_PREFIX_}/Library"
     export OCAMLLIB="${_BUILD_PREFIX_}/Library/lib/ocaml"
+    export OCAMLLIB_MSYS="${_BUILD_PREFIX}/Library/lib/ocaml"
     export HOST_PREFIX="${_PREFIX_}/Library"
     # Stublibs path for bytecode DLLs (dllunixbyt.dll, etc.)
     export CAML_LD_LIBRARY_PATH="${OCAMLLIB}/stublibs"
