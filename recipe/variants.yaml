@@ -7,3 +7,7 @@ c_stdlib:
   - if: not unix
     then:
       - m2w64-sysroot
+ocaml_compiler:
+  - ocaml
+ocaml_compiler_version:
+  - "5.4.0"
