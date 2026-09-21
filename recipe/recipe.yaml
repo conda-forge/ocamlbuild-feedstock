@@ -48,10 +48,21 @@ tests:
         - ocamlbuild.native
       files:
         - ${{ library }}lib/ocaml/ocamlbuild/META
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.{cmx,o,cmo}
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.{cmi,cmx,o}
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.{a,cma,cmxa}
-        - ${{ library }}lib/ocaml/ocamlbuild/signatures.{cmi,cmti,mli}
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmo
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmx
+        # Object and library extensions follow the windows toolchain: the gcc lane
+        # emits .o and .a, the vs2022 lane .obj and .lib, with identical basenames.
+        # Glob over the extension rather than branching the block per lane.
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.o*
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.cmi
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.cmx
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.o*
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib*
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.cma
+        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.cmxa
+        - ${{ library }}lib/ocaml/ocamlbuild/signatures.cmi
+        - ${{ library }}lib/ocaml/ocamlbuild/signatures.cmti
+        - ${{ library }}lib/ocaml/ocamlbuild/signatures.mli
         - ${{ library }}share/man/man1/ocamlbuild.1
 
   # Cross-compiled platforms: verify binary architecture
@@ -91,7 +102,10 @@ tests:
         - ocamlbuild hello.byte && ${{ dot }}hello.byte
       requirements:
         run:
-          - ${{ c_compiler }}_impl_${{ target_platform }}
+          # MSVC ships no _impl_ package; vs2022_win-64 is the activation package.
+          - if: not unix and c_compiler == "vs2022"
+            then: vs2022_${{ target_platform }}
+            else: ${{ c_compiler }}_impl_${{ target_platform }}
           - ocaml-compiler
 
   # Cross-compiled platforms: limited tests (QEMU constraints)
