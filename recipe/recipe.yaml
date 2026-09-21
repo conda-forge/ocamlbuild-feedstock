@@ -30,13 +30,12 @@ requirements:
       else:
         - ${{ stdlib("c") }}
     - ${{ m2 }}make
-    - ${{ m2 }}sed
     - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    # Every sed/cp/tr/mv call site in build.sh is windows-only.
     - if: not unix
       then:
         - ${{ m2 }}coreutils
-        - ${{ m2 }}diffutils
-        - ${{ m2 }}which
+        - ${{ m2 }}sed
   run_constraints:
     - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
