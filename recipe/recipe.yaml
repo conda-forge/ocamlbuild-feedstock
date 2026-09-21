@@ -1,6 +1,10 @@
 context:
+  build_number: 2
   name: ocamlbuild
   version: 0.16.1
+
+  # ocaml_win-64 ships gcc_* and vs2022_* at the same version/build; name the track.
+  c_toolchain: ${{ "" if unix else c_compiler ~ "_*" }}
   library: ${{ "Library/" if not unix else "" }}
   dot: ${{ "./" if unix else "" }}
   m2: ${{ "m2-" if not unix else "" }}
@@ -14,23 +18,27 @@ source:
   sha256: 2ba6857f2991b7f69368e8db818b163d31cf5a367f15f5953bf8f01a77b3d4fc
 
 build:
-  number: 0
+  number: ${{ build_number }}
+  script: build.sh
 
 requirements:
   build:
     - ${{ compiler('ocaml') }}
+    - if: not unix and c_compiler == "gcc"
+      then:
+        - ${{ stdlib("m2w64_c") }}
+      else:
+        - ${{ stdlib("c") }}
     - ${{ m2 }}make
     - ${{ m2 }}sed
-    # - if: build_platform != target_platform
-    #   then:
-    #     - ocaml_${{ target_platform }} >=5.4.0 *_3
+    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
     - if: not unix
       then:
         - ${{ m2 }}coreutils
         - ${{ m2 }}diffutils
         - ${{ m2 }}which
   run_constraints:
-    - ocaml_${{ target_platform }} >=5.4.0
+    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 tests:
   - package_contents:
