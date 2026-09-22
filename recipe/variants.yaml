@@ -1,9 +1,10 @@
 c_compiler:
-  - if: not unix
+  - if: not unix and x86_64
     then:
+      - vs2022
       - gcc
 
-c_stdlib:
-  - if: not unix
-    then:
-      - m2w64-sysroot
+ocaml_compiler:
+  - ocaml
+ocaml_compiler_version:
+  - "5.4.0"
