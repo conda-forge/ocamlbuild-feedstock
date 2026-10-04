@@ -1,5 +1,5 @@
 context:
-  build_number: 2
+  build_number: 102
   name: ocamlbuild
   version: 0.16.1
 
@@ -19,6 +19,7 @@ source:
 
 build:
   number: ${{ build_number }}
+  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_experimental_${{ build_number }}
   script: build.sh
 
 requirements:
@@ -30,35 +31,47 @@ requirements:
       else:
         - ${{ stdlib("c") }}
     - ${{ m2 }}make
-    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    # ocaml_win-arm64 < 116 lacks stack probes; Unix.read/write crash.
+    - if: win and arm64
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+      else: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
     # Every sed/cp/tr/mv call site in build.sh is windows-only.
     - if: not unix
       then:
         - ${{ m2 }}coreutils
         - ${{ m2 }}sed
   run_constraints:
-    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    - if: win and arm64
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+      else: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 tests:
   - package_contents:
       strict: true
       bin:
         - ocamlbuild
-        - ocamlbuild.native
+        # win-arm64 OCaml is bytecode-only: no native artefacts
+        - if: not (win and arm64)
+          then: ocamlbuild.native
       files:
         - ${{ library }}lib/ocaml/ocamlbuild/META
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmo
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmx
+        - if: not (win and arm64)
+          then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmx
         # Object and library extensions follow the windows toolchain: the gcc lane
         # emits .o and .a, the vs2022 lane .obj and .lib, with identical basenames.
         # Glob over the extension rather than branching the block per lane.
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.o*
+        - if: not (win and arm64)
+          then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.o*
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.cmi
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.cmx
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.o*
+        - if: not (win and arm64)
+          then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.cmx
+        - if: not (win and arm64)
+          then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild_*.o*
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib*
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.cma
-        - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.cmxa
+        - if: not (win and arm64)
+          then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuildlib.cmxa
         - ${{ library }}lib/ocaml/ocamlbuild/signatures.cmi
         - ${{ library }}lib/ocaml/ocamlbuild/signatures.cmti
         - ${{ library }}lib/ocaml/ocamlbuild/signatures.mli
@@ -82,13 +95,14 @@ tests:
     then:
       script:
         - ocamlbuild -version | grep ${{ version }}
-        - ocamlbuild.native -version | grep ${{ version }}
+        - if: not (win and arm64)
+          then: ocamlbuild.native -version | grep ${{ version }}
       requirements:
         run:
           - ${{ m2 }}grep
 
   # Native platforms: full functional test
-  - if: build_platform == target_platform
+  - if: build_platform == target_platform and not (win and arm64)
     then:
       script:
         - if: unix
@@ -106,6 +120,21 @@ tests:
             then: vs2022_${{ target_platform }}
             else: ${{ c_compiler }}_impl_${{ target_platform }}
           - ocaml-compiler
+
+  # win-arm64 OCaml is bytecode-only (no ocamlopt)
+  - if: win and arm64
+    then:
+      script:
+        - echo let () = print_endline "Hello from ocamlbuild" > hello.ml
+        - ocamlbuild hello.byte && hello.byte
+        - python testing/test-arch.py "%PREFIX%\Library\bin\ocamlbuild.exe"
+      files:
+        recipe:
+          - testing/test-arch.py
+      requirements:
+        run:
+          - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+          - python >=3.9
 
   # Cross-compiled platforms: limited tests (QEMU constraints)
   - if: linux and (build_platform != target_platform)
