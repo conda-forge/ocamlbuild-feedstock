@@ -91,7 +91,12 @@ fix_rattler_paths "${SRC_DIR}/Makefile.config" "${SRC_DIR}/src/ocamlbuild_config
 
 # Build
 make configure
-make native byte man
+# all and install-lib follow OCAML_NATIVE from Makefile.config (false on win-arm64).
+make all
 
 # Install
-make install-bin-native install-lib install-man
+if [[ "${target_platform}" == "win-arm64" ]]; then
+  make install-bin-byte install-lib install-man
+else
+  make install-bin-native install-lib install-man
+fi

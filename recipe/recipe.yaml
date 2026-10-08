@@ -40,6 +40,10 @@ requirements:
       then:
         - ${{ m2 }}coreutils
         - ${{ m2 }}sed
+  run:
+    # win-arm64 ocamlbuild is bytecode; it needs ocamlrun at runtime.
+    - if: win and arm64
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
   run_constraints:
     - if: win and arm64
       then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
@@ -53,6 +57,8 @@ tests:
         # win-arm64 OCaml is bytecode-only: no native artefacts
         - if: not (win and arm64)
           then: ocamlbuild.native
+        - if: win and arm64
+          then: ocamlbuild.byte
       files:
         - ${{ library }}lib/ocaml/ocamlbuild/META
         - ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmo
@@ -76,6 +82,9 @@ tests:
         - ${{ library }}lib/ocaml/ocamlbuild/signatures.cmti
         - ${{ library }}lib/ocaml/ocamlbuild/signatures.mli
         - ${{ library }}share/man/man1/ocamlbuild.1
+        # rattler-build packages the win-arm64 test's `files:` here.
+        - if: win and arm64
+          then: etc/conda/test-files/ocamlbuild/**
 
   # Cross-compiled platforms: verify binary architecture
   - if: build_platform != target_platform
@@ -144,8 +153,10 @@ tests:
         - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
         - ocamlbuild hello.cmo
       requirements:
-        run:
+        # file has no riscv64/s390x build; take it from the build platform.
+        build:
           - file
+        run:
           - ocaml-compiler
 
 about:
