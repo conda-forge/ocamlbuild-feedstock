@@ -20,8 +20,16 @@ fail() { echo "ERROR: $*" >&2; exit 1; }
 
 setup_ocaml_env() {
   if is_unix; then
-    export OCAMLLIB="${BUILD_PREFIX}/lib/ocaml"
+    export OCAMLLIB_NATIVE="${BUILD_PREFIX}/lib/ocaml"
+    export OCAMLLIB="${OCAMLLIB_NATIVE}"
     export HOST_PREFIX="${PREFIX}"
+    # The cross activation defaults to the build machine's compilers. Switch to
+    # the target toolchain and stdlib, and put the cross ocamlc/ocamlopt first.
+    if [[ -n "${OCAML_CROSS_PREFIX:-}" ]]; then
+      ocaml_use_cross
+      export OCAMLLIB="${OCAML_CROSS_PREFIX}/lib/ocaml"
+      export PATH="${OCAML_CROSS_PREFIX}/bin:${PATH}"
+    fi
   else
     # Windows paths use Library subdirectory.
     # BUILD_PREFIX arrives backslashed (D:\bld\...) from rattler-build; the OCaml
@@ -89,9 +97,23 @@ make -f configure.make
 # Fix Windows rattler-build paths if needed
 fix_rattler_paths "${SRC_DIR}/Makefile.config" "${SRC_DIR}/src/ocamlbuild_config.ml"
 
+# Relocation rewrites the prefix inside bin/ocamlbuild by shrinking it and
+# NUL-padding in place, but OCaml strings keep their stored length, so -where
+# would end in NULs. Cut the configured paths at the first NUL at runtime.
+sed -E "s/^let (bindir|libdir|ocaml_libdir|libdir_abs) = (.*)$/let \1 = (fun s -> match String.index_opt s '\\\\000' with Some i -> String.sub s 0 i | None -> s) \2/" \
+  src/ocamlbuild_config.ml > src/ocamlbuild_config.ml.tmp
+mv src/ocamlbuild_config.ml.tmp src/ocamlbuild_config.ml
+
 # Build
 make configure
 # all and install-lib follow OCAML_NATIVE from Makefile.config (false on win-arm64).
+# On cross builds, link options_man.byte against the target stdlib, then run it
+# with the build machine's ocamlrun (its header names the target's runtime).
+if is_unix && [[ -n "${OCAML_CROSS_PREFIX:-}" ]]; then
+  make man/options_man.byte
+  OCAMLLIB="${OCAMLLIB_NATIVE}" "${BUILD_PREFIX}/bin/ocamlrun" man/options_man.byte \
+    > man/ocamlbuild.options.1
+fi
 make all
 
 # Install
