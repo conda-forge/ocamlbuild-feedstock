@@ -1,5 +1,5 @@
 context:
-  build_number: 102
+  build_number: 103
   name: ocamlbuild
   version: 0.16.1
 
@@ -20,6 +20,16 @@ source:
 build:
   number: ${{ build_number }}
   string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_experimental_${{ build_number }}
+  prefix_detection:
+    ignore:
+      # Relocation NUL-pads paths inside marshalled bytecode and corrupts it.
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cma
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cmo
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cmi
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cmx
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cmxa
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cmt
+      - ${{ library }}lib/ocaml/ocamlbuild/*.cmti
   script: build.sh
 
 requirements:
@@ -98,6 +108,13 @@ tests:
           then:
             - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild
             - readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native
+        # readelf only prints the header; fail if the binary is not for the target.
+        - if: target_platform == "linux-s390x"
+          then: readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native | grep -q "IBM S/390"
+        - if: target_platform == "linux-ppc64le"
+          then: readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native | grep -q "PowerPC64"
+        - if: target_platform == "linux-riscv64"
+          then: readelf -h ${CONDA_PREFIX}/bin/ocamlbuild.native | grep -q "RISC-V"
 
   # Native platforms: version check
   - if: build_platform == target_platform
@@ -122,6 +139,14 @@ tests:
         - ocamlbuild hello.native && ${{ dot }}hello.native
         - ocamlbuild -clean
         - ocamlbuild hello.byte && ${{ dot }}hello.byte
+        # A plugin build reads ocamlbuild.cmo from -where, which binary prefix
+        # relocation can corrupt.
+        - if: unix
+          then:
+            - mkdir -p plugin_test && cd plugin_test
+            - echo 'open Ocamlbuild_plugin let () = dispatch (fun _ -> ())' > myocamlbuild.ml
+            - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+            - ocamlbuild hello.native && ./hello.native
       requirements:
         run:
           # MSVC ships no _impl_ package; vs2022_win-64 is the activation package.
@@ -152,6 +177,11 @@ tests:
         - ocamlbuild -documentation
         - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
         - ocamlbuild hello.cmo
+        # A plugin forces the target compiler to check ocamlbuild's .cmi against its stdlib.
+        - mkdir -p plugin_test && cd plugin_test
+        - echo 'open Ocamlbuild_plugin let () = dispatch (fun _ -> ())' > myocamlbuild.ml
+        - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
+        - ocamlbuild -byte-plugin hello.cmo
       requirements:
         # file has no riscv64/s390x build; take it from the build platform.
         build:
