@@ -1,5 +1,5 @@
 context:
-  build_number: 103
+  build_number: 104
   name: ocamlbuild
   version: 0.16.1
 
@@ -177,6 +177,7 @@ tests:
         - ocamlbuild -documentation
         - echo 'let () = print_endline "Hello from ocamlbuild"' > hello.ml
         - ocamlbuild hello.cmo
+        - ocamlbuild -where
         # A plugin forces the target compiler to check ocamlbuild's .cmi against its stdlib.
         - mkdir -p plugin_test && cd plugin_test
         - echo 'open Ocamlbuild_plugin let () = dispatch (fun _ -> ())' > myocamlbuild.ml
