@@ -92,7 +92,15 @@ if is_non_unix; then
 fi
 
 # Configure
-make -f configure.make
+# configure.make takes OCAML_LIBDIR from the compiler's Makefile.config, and on the
+# cross build it came out empty. An empty ocaml_libdir makes -where return
+# $OCAMLLIB plus the configured libdir, which does not exist. Pin it to the
+# install libdir so -where is always that libdir.
+if is_unix; then
+  make -f configure.make OCAML_LIBDIR="${OCAMLBUILD_LIBDIR}"
+else
+  make -f configure.make
+fi
 
 # Fix Windows rattler-build paths if needed
 fix_rattler_paths "${SRC_DIR}/Makefile.config" "${SRC_DIR}/src/ocamlbuild_config.ml"
