@@ -1,5 +1,5 @@
 context:
-  build_number: 104
+  build_number: 4
   name: ocamlbuild
   version: 0.16.1
 
@@ -19,7 +19,6 @@ source:
 
 build:
   number: ${{ build_number }}
-  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_experimental_${{ build_number }}
   prefix_detection:
     ignore:
       # Relocation NUL-pads paths inside marshalled bytecode and corrupts it.
@@ -41,9 +40,9 @@ requirements:
       else:
         - ${{ stdlib("c") }}
     - ${{ m2 }}make
-    # ocaml_win-arm64 < 116 lacks stack probes; Unix.read/write crash.
+    # ocaml_win-arm64 < 12 lacks stack probes; Unix.read/write crash.
     - if: win and arm64
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
       else: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
     # Every sed/cp/tr/mv call site in build.sh is windows-only.
     - if: not unix
@@ -53,10 +52,10 @@ requirements:
   run:
     # win-arm64 ocamlbuild is bytecode; it needs ocamlrun at runtime.
     - if: win and arm64
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
   run_constraints:
     - if: win and arm64
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
       else: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 tests:
@@ -167,7 +166,7 @@ tests:
           - testing/test-arch.py
       requirements:
         run:
-          - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=116"]
+          - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
           - python >=3.9
 
   # Cross-compiled platforms: limited tests (QEMU constraints)
