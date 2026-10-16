@@ -3,8 +3,6 @@ c_compiler:
     then:
       - vs2022
       - gcc
-
-ocaml_compiler:
-  - ocaml
-ocaml_compiler_version:
-  - "5.4.0"
+  - if: not unix and arm64
+    then:
+      - zig

@@ -114,6 +114,7 @@ mv src/ocamlbuild_config.ml.tmp src/ocamlbuild_config.ml
 
 # Build
 make configure
+# all and install-lib follow OCAML_NATIVE from Makefile.config (false on win-arm64).
 # On cross builds, link options_man.byte against the target stdlib, then run it
 # with the build machine's ocamlrun (its header names the target's runtime).
 if is_unix && [[ -n "${OCAML_CROSS_PREFIX:-}" ]]; then
@@ -121,7 +122,11 @@ if is_unix && [[ -n "${OCAML_CROSS_PREFIX:-}" ]]; then
   OCAMLLIB="${OCAMLLIB_NATIVE}" "${BUILD_PREFIX}/bin/ocamlrun" man/options_man.byte \
     > man/ocamlbuild.options.1
 fi
-make native byte man
+make all
 
 # Install
-make install-bin-native install-lib install-man
+if [[ "${target_platform}" == "win-arm64" ]]; then
+  make install-bin-byte install-lib install-man
+else
+  make install-bin-native install-lib install-man
+fi
