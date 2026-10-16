@@ -40,10 +40,9 @@ requirements:
       else:
         - ${{ stdlib("c") }}
     - ${{ m2 }}make
-    # ocaml_win-arm64 < 12 lacks stack probes; Unix.read/write crash.
-    - if: win and arm64
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
-      else: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    # compiler('ocaml') carries no build string; pin the windows toolchain track.
+    - if: not unix
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
     # Every sed/cp/tr/mv call site in build.sh is windows-only.
     - if: not unix
       then:
@@ -52,11 +51,9 @@ requirements:
   run:
     # win-arm64 ocamlbuild is bytecode; it needs ocamlrun at runtime.
     - if: win and arm64
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
   run_constraints:
-    - if: win and arm64
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
-      else: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 tests:
   - package_contents:
@@ -166,7 +163,7 @@ tests:
           - testing/test-arch.py
       requirements:
         run:
-          - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* zig_*[build_number=">=12"]
+          - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
           - python >=3.9
 
   # Cross-compiled platforms: limited tests (QEMU constraints)
