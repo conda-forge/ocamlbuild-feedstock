@@ -1,5 +1,5 @@
 context:
-  build_number: 5
+  build_number: 6
   name: ocamlbuild
   version: 0.16.1
 
@@ -19,6 +19,7 @@ source:
 
 build:
   number: ${{ build_number }}
+  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_${{ build_number }}
   prefix_detection:
     ignore:
       # Relocation NUL-pads paths inside marshalled bytecode and corrupts it.
@@ -33,20 +34,22 @@ build:
 
 requirements:
   build:
-    - ${{ compiler('ocaml') }}
+    - ${{ compiler("ocaml") }}
     # Since ocaml _13 the cross compiler no longer pulls the native one; build.sh runs ocamlrun on the build machine.
-    - if: build_platform != target_platform
+    - if: build_platform != target_platform and unix
       then: ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.*
+    - if: build_platform != target_platform and not unix
+      then: ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.* gcc_*
     - if: not unix and c_compiler == "gcc"
       then:
         - ${{ stdlib("m2w64_c") }}
       else:
         - ${{ stdlib("c") }}
-    # ocaml_win-64 _14 only run-constrains vs2022_win-64; take the MSVC toolchain here, once.
-    - if: not unix and c_compiler == "vs2022"
-      then: ${{ compiler('c') }}
+    # ocaml_win-* only run-constrains the MSVC/zig toolchain; take it here, once.
+    - if: not unix and c_compiler != "gcc"
+      then: ${{ compiler("c") }}
     - ${{ m2 }}make
-    # compiler('ocaml') carries no build string; pin the windows toolchain track.
+    # compiler("ocaml") carries no build string; pin the windows toolchain track.
     - if: not unix
       then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
     # Every sed/cp/tr/mv call site in build.sh is windows-only.
@@ -58,13 +61,11 @@ requirements:
     # ocamlbuild ships a library (.cmi/.cma/.cmxa); ocaml's run_export pins the compiler patch version.
     - ocaml ${{ ocaml_compiler_version }}.*
     # The ocaml metapackage does not pick the windows track; pin it to match the build.
-    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
-  run:
-    # win-arm64 ocamlbuild is bytecode; it needs ocamlrun at runtime.
-    - if: win and arm64
+    - if: not unix
       then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
   run_constraints:
-    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    - if: not unix
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 tests:
   - package_contents:
@@ -156,11 +157,12 @@ tests:
             - ocamlbuild hello.native && ./hello.native
       requirements:
         run:
-          # MSVC ships no _impl_ package; vs2022_win-64 is the activation package.
-          - if: not unix and c_compiler == "vs2022"
-            then: vs2022_${{ target_platform }}
-            else: ${{ c_compiler }}_impl_${{ target_platform }}
-          - ocaml-compiler
+          - ocaml ${{ ocaml_compiler_version }}.*
+          - if: not unix
+            then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+          # ocamlopt links native code; MSVC/zig are only run-constrained by ocaml_win-*.
+          - if: not unix and c_compiler != "gcc"
+            then: ${{ compiler("c") }}
 
   # win-arm64 OCaml is bytecode-only (no ocamlopt)
   - if: win and arm64
@@ -174,7 +176,6 @@ tests:
           - testing/test-arch.py
       requirements:
         run:
-          - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
           - python >=3.9
 
   # Cross-compiled platforms: limited tests (QEMU constraints)
@@ -195,7 +196,7 @@ tests:
         build:
           - file
         run:
-          - ocaml-compiler
+          - ocaml ${{ ocaml_compiler_version }}.*
 
 about:
   homepage: https://ocaml.org/
