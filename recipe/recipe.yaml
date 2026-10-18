@@ -1,5 +1,5 @@
 context:
-  build_number: 6
+  build_number: 7
   name: ocamlbuild
   version: 0.16.1
 
@@ -35,7 +35,11 @@ build:
 requirements:
   build:
     - ${{ compiler("ocaml") }}
-    # Since ocaml _13 the cross compiler no longer pulls the native one; build.sh runs ocamlrun on the build machine.
+    # ocaml _16+ unix cross compilers self-activate (OCAMLLIB, cross ocamlc/ocamlopt on PATH).
+    # This floor breaks the 5.4.1 migration; drop it there.
+    - if: build_platform != target_platform and unix
+      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* [build_number=">=16"]
+    # Cross-linked bytecode names the target's ocamlrun; build.sh runs the man generator with this one.
     - if: build_platform != target_platform and unix
       then: ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.*
     - if: build_platform != target_platform and not unix
