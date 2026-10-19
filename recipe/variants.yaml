@@ -6,3 +6,7 @@ c_compiler:
   - if: not unix and arm64
     then:
       - zig
+
+# DRAFT ONLY: rehearse the ocaml 5.4.1 migration. Drop before merge.
+ocaml_compiler_version:
+  - 5.4.1
