@@ -10,13 +10,9 @@ c_compiler:
 ocaml_compiler:
   - ocaml
 ocaml_compiler_version:
-  - "5.4.0"
+  - "5.4.1"
 
-channel_sources:
-  - if: not unix and arm64
-    then: conda-forge/label/ocaml_experimental,conda-forge/label/zig_dev,conda-forge
-    else: conda-forge/label/ocaml_experimental,conda-forge
-
-# Uploads from this branch go to the ocaml_experimental label, not main.
+# Uploads from this branch go to a label holding only ocamlbuild, so downstreams can
+# list it first in channel_sources without strict priority hiding ocaml from main.
 channel_targets:
-  - conda-forge ocaml_experimental
+  - conda-forge ocamlbuild_experimental
