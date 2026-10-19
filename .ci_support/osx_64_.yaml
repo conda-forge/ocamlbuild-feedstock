@@ -11,7 +11,7 @@ c_stdlib_version:
 channel_sources:
 - conda-forge
 channel_targets:
-- conda-forge main
+- conda-forge ocamlbuild_experimental
 macos_machine:
 - x86_64-apple-darwin13.4.0
 ocaml_compiler:

@@ -1,5 +1,5 @@
 context:
-  build_number: 8
+  build_number: 105
   name: ocamlbuild
   version: 0.16.1
 
@@ -19,7 +19,7 @@ source:
 
 build:
   number: ${{ build_number }}
-  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_${{ build_number }}
+  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_experimental_${{ build_number }}
   prefix_detection:
     ignore:
       # Relocation NUL-pads paths inside marshalled bytecode and corrupts it.

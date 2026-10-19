@@ -7,7 +7,7 @@ c_stdlib_version:
 channel_sources:
 - conda-forge
 channel_targets:
-- conda-forge main
+- conda-forge ocamlbuild_experimental
 docker_image:
 - quay.io/condaforge/linux-anvil-x86_64:alma10
 ocaml_compiler:

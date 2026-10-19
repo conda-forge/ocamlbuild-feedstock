@@ -7,6 +7,12 @@ c_compiler:
     then:
       - zig
 
-# DRAFT ONLY: rehearse the ocaml 5.4.1 migration. Drop before merge.
+ocaml_compiler:
+  - ocaml
 ocaml_compiler_version:
-  - 5.4.1
+  - "5.4.1"
+
+# Uploads from this branch go to a label holding only ocamlbuild, so downstreams can
+# list it first in channel_sources without strict priority hiding ocaml from main.
+channel_targets:
+  - conda-forge ocamlbuild_experimental
