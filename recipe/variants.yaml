@@ -12,7 +12,11 @@ ocaml_compiler:
 ocaml_compiler_version:
   - "5.4.1"
 
-# Uploads from this branch go to a label holding only ocamlbuild, so downstreams can
-# list it first in channel_sources without strict priority hiding ocaml from main.
+# Strict priority hides every main build of a name the label carries, so the label
+# must hold the ocaml version pinned above.
+channel_sources:
+  - conda-forge/label/ocaml_experimental,conda-forge
+
+# Uploads from this branch go to the ocaml_experimental label, not main.
 channel_targets:
-  - conda-forge ocamlbuild_experimental
+  - conda-forge ocaml_experimental
