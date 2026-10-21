@@ -6,7 +6,7 @@ IFS=$'\n\t'
 # ocamlbuild Build Script
 # ==============================================================================
 # Uses standardized build_functions.sh for cross-feedstock consistency.
-# Unix cross builds rely on the ocaml 5.4.1 cross self-activation and its ocamlrun shim.
+# Unix cross builds rely on the ocaml cross self-activation and its ocamlrun shim.
 # ==============================================================================
 
 is_macos() { [[ "${target_platform}" == "osx-"* ]]; }
