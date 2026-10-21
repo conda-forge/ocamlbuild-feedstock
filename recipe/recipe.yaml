@@ -1,5 +1,5 @@
 context:
-  build_number: 106
+  build_number: 107
   name: ocamlbuild
   version: 0.16.1
 
@@ -35,10 +35,6 @@ build:
 requirements:
   build:
     - ${{ compiler("ocaml") }}
-    # build.sh runs bytecode through the cross ocamlrun shim, new in ocaml 5.4.1 build 1.
-    # Drop this floor at the next ocaml version migration.
-    - if: build_platform != target_platform and unix
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* [build_number=">=1"]
     - if: build_platform != target_platform and not unix
       then: ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.* gcc_*
     - if: not unix and c_compiler == "gcc"
