@@ -6,7 +6,7 @@ IFS=$'\n\t'
 # ocamlbuild Build Script
 # ==============================================================================
 # Uses standardized build_functions.sh for cross-feedstock consistency.
-# Unix cross builds rely on ocaml _16+ self-activation (see recipe.yaml).
+# Unix cross builds rely on the ocaml cross self-activation and its ocamlrun shim.
 # ==============================================================================
 
 is_macos() { [[ "${target_platform}" == "osx-"* ]]; }
@@ -107,11 +107,10 @@ mv src/ocamlbuild_config.ml.tmp src/ocamlbuild_config.ml
 make configure
 # all and install-lib follow OCAML_NATIVE from Makefile.config (false on win-arm64).
 # On cross builds the header of cross-linked bytecode names the target's ocamlrun,
-# which is not installed; run options_man.byte with the build machine's runtime.
+# which is not installed; run options_man.byte through the cross ocamlrun shim.
 if is_unix && [[ "${build_platform}" != "${target_platform}" ]]; then
   make man/options_man.byte
-  OCAMLLIB="${BUILD_PREFIX}/lib/ocaml" "${BUILD_PREFIX}/bin/ocamlrun" man/options_man.byte \
-    > man/ocamlbuild.options.1
+  ocamlrun man/options_man.byte > man/ocamlbuild.options.1
 fi
 make all
 

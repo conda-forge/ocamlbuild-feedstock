@@ -1,5 +1,5 @@
 context:
-  build_number: 7
+  build_number: 8
   name: ocamlbuild
   version: 0.16.1
 
@@ -35,13 +35,6 @@ build:
 requirements:
   build:
     - ${{ compiler("ocaml") }}
-    # ocaml _16+ unix cross compilers self-activate (OCAMLLIB, cross ocamlc/ocamlopt on PATH).
-    # This floor breaks the 5.4.1 migration; drop it there.
-    - if: build_platform != target_platform and unix
-      then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* [build_number=">=16"]
-    # Cross-linked bytecode names the target's ocamlrun; build.sh runs the man generator with this one.
-    - if: build_platform != target_platform and unix
-      then: ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.*
     - if: build_platform != target_platform and not unix
       then: ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.* gcc_*
     - if: not unix and c_compiler == "gcc"
