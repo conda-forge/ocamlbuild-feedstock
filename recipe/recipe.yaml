@@ -1,9 +1,9 @@
 context:
-  build_number: 107
+  build_number: 108
   name: ocamlbuild
   version: 0.16.1
 
-  # ocaml_win-64 ships gcc_* and vs2022_* at the same version/build; name the track.
+  # ocaml_win-64 ships gcc_* and vs_* at the same version/build; name the track.
   c_toolchain: ${{ "" if unix else c_compiler ~ "_*" }}
   library: ${{ "Library/" if not unix else "" }}
   dot: ${{ "./" if unix else "" }}
@@ -44,7 +44,7 @@ requirements:
         - ${{ stdlib("c") }}
     # ocaml_win-* only run-constrains the MSVC/zig toolchain; take it here, once.
     - if: not unix and c_compiler != "gcc"
-      then: ${{ compiler("c") }}
+      then: ${{ "zig_" ~ target_platform if c_compiler == "zig" else compiler("c") }}
     - ${{ m2 }}make
     # compiler("ocaml") carries no build string; pin the windows toolchain track.
     - if: not unix
@@ -80,7 +80,7 @@ tests:
         - if: not (win and arm64)
           then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.cmx
         # Object and library extensions follow the windows toolchain: the gcc lane
-        # emits .o and .a, the vs2022 lane .obj and .lib, with identical basenames.
+        # emits .o and .a, the vs lane .obj and .lib, with identical basenames.
         # Glob over the extension rather than branching the block per lane.
         - if: not (win and arm64)
           then: ${{ library }}lib/ocaml/ocamlbuild/ocamlbuild.o*
@@ -159,7 +159,7 @@ tests:
             then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
           # ocamlopt links native code; MSVC/zig are only run-constrained by ocaml_win-*.
           - if: not unix and c_compiler != "gcc"
-            then: ${{ compiler("c") }}
+            then: ${{ "zig_" ~ target_platform if c_compiler == "zig" else compiler("c") }}
 
   # win-arm64 OCaml is bytecode-only (no ocamlopt)
   - if: win and arm64
@@ -220,5 +220,4 @@ about:
 extra:
   recipe-maintainers:
     - dslarm
-    - peterjc
     - MementoRC
