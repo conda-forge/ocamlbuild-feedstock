@@ -236,5 +236,4 @@ Feedstock Maintainers
 
 * [@MementoRC](https://github.com/MementoRC/)
 * [@dslarm](https://github.com/dslarm/)
-* [@peterjc](https://github.com/peterjc/)
 
