@@ -1,5 +1,5 @@
 context:
-  build_number: 108
+  build_number: 10
   name: ocamlbuild
   version: 0.16.1
 
@@ -19,7 +19,7 @@ source:
 
 build:
   number: ${{ build_number }}
-  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_experimental_${{ build_number }}
+  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_${{ build_number }}
   prefix_detection:
     ignore:
       # Relocation NUL-pads paths inside marshalled bytecode and corrupts it.
@@ -44,7 +44,7 @@ requirements:
         - ${{ stdlib("c") }}
     # ocaml_win-* only run-constrains the MSVC/zig toolchain; take it here, once.
     - if: not unix and c_compiler != "gcc"
-      then: ${{ "zig_" ~ target_platform if c_compiler == "zig" else compiler("c") }}
+      then: ${{ compiler("zig") if c_compiler == "zig" else compiler("c") }}
     - ${{ m2 }}make
     # compiler("ocaml") carries no build string; pin the windows toolchain track.
     - if: not unix
@@ -159,7 +159,7 @@ tests:
             then: ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
           # ocamlopt links native code; MSVC/zig are only run-constrained by ocaml_win-*.
           - if: not unix and c_compiler != "gcc"
-            then: ${{ "zig_" ~ target_platform if c_compiler == "zig" else compiler("c") }}
+            then: ${{ compiler("zig") if c_compiler == "zig" else compiler("c") }}
 
   # win-arm64 OCaml is bytecode-only (no ocamlopt)
   - if: win and arm64
